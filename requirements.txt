@@ -9,7 +9,7 @@ Pillow==10.1.0
 
 # Deep Learning OCR Libraries
 easyocr==1.7.1
-paddlepaddle==2.6.0
+paddlepaddle==2.6.2
 paddleocr==2.7.3
 
 # Google Cloud Vision API (for better OCR)
