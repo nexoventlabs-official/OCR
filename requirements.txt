@@ -3,14 +3,15 @@ flask==3.0.0
 flask-cors==4.0.0
 
 # Computer Vision & OCR
-opencv-python==4.8.1.78
+opencv-python-headless==4.8.1.78
 pytesseract==0.3.10
 Pillow==10.1.0
 
 # Deep Learning OCR Libraries
 easyocr==1.7.1
-paddlepaddle==2.6.2
-paddleocr==2.7.3
+# paddlepaddle and paddleocr removed due to opencv version conflicts
+# paddlepaddle==2.6.2
+# paddleocr==2.7.3
 
 # Google Cloud Vision API (for better OCR)
 google-cloud-vision==3.5.0
