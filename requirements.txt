@@ -1,0 +1,35 @@
+# Web Framework
+flask==3.0.0
+flask-cors==4.0.0
+
+# Computer Vision & OCR
+opencv-python==4.8.1.78
+pytesseract==0.3.10
+Pillow==10.1.0
+
+# Deep Learning OCR Libraries
+easyocr==1.7.1
+paddlepaddle==2.6.0
+paddleocr==2.7.3
+
+# Google Cloud Vision API (for better OCR)
+google-cloud-vision==3.5.0
+
+# Google Sheets Integration
+gspread==5.12.0
+google-auth==2.23.4
+google-auth-oauthlib==1.1.0
+
+# AI/ML for enhanced extraction
+groq==0.4.2
+
+# Utilities
+python-dotenv==1.0.0
+numpy==1.26.2
+requests==2.31.0
+
+# Cloud Storage
+cloudinary==1.36.0
+
+# Production Server
+gunicorn==21.2.0

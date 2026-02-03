@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment OCR Scanner</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #4cc9f0;
+            --warning-color: #f72585;
+            --dark-color: #1a1a2e;
+            --light-color: #f8f9fa;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar {
+            background: rgba(26, 26, 46, 0.95) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(67, 97, 238, 0.3);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #fff !important;
+        }
+        
+        .navbar-brand i {
+            color: var(--success-color);
+        }
+        
+        .main-container {
+            padding: 2rem 0;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(67, 97, 238, 0.2);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 16px 16px 0 0 !important;
+            padding: 1rem 1.5rem;
+            border: none;
+        }
+        
+        .card-header h5 {
+            color: #fff;
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .webcam-container {
+            position: relative;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 16/9;
+        }
+        
+        #webcam-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .webcam-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            font-size: 1.2rem;
+        }
+        
+        .btn-capture {
+            background: linear-gradient(135deg, #f72585, #7209b7);
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-capture:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(247, 37, 133, 0.4);
+        }
+        
+        .btn-start {
+            background: linear-gradient(135deg, #4cc9f0, #4361ee);
+            border: none;
+        }
+        
+        .btn-stop {
+            background: linear-gradient(135deg, #f72585, #b5179e);
+            border: none;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-active {
+            background: #4cc9f0;
+            box-shadow: 0 0 10px #4cc9f0;
+        }
+        
+        .status-inactive {
+            background: #6c757d;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .extracted-data {
+            color: #fff;
+        }
+        
+        .data-field {
+            background: rgba(67, 97, 238, 0.1);
+            border: 1px solid rgba(67, 97, 238, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .data-field label {
+            color: var(--success-color);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.25rem;
+        }
+        
+        .data-field .value {
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        
+        .upload-zone {
+            border: 2px dashed rgba(67, 97, 238, 0.5);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--primary-color);
+            background: rgba(67, 97, 238, 0.1);
+        }
+        
+        .upload-zone i {
+            font-size: 3rem;
+            color: var(--primary-color);
+        }
+        
+        .upload-zone p {
+            color: #aaa;
+            margin-top: 1rem;
+        }
+        
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        
+        .records-table {
+            color: #fff;
+        }
+        
+        .records-table th {
+            background: rgba(67, 97, 238, 0.3);
+            color: var(--success-color);
+            border: none;
+        }
+        
+        .records-table td {
+            border-color: rgba(255, 255, 255, 0.1);
+            vertical-align: middle;
+        }
+        
+        .loading-spinner {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .loading-spinner.active {
+            display: flex;
+        }
+        
+        .spinner-content {
+            text-align: center;
+            color: #fff;
+        }
+        
+        .spinner-border {
+            width: 4rem;
+            height: 4rem;
+            border-width: 0.4rem;
+        }
+        
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        
+        .stats-card {
+            text-align: center;
+            padding: 1.5rem;
+        }
+        
+        .stats-card .number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--success-color);
+        }
+        
+        .stats-card .label {
+            color: #aaa;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .sheet-link {
+            color: var(--success-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .sheet-link:hover {
+            color: #fff;
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-upc-scan"></i> Assessment OCR Scanner
+            </a>
+            <div class="d-flex align-items-center">
+                <span class="text-light me-3">
+                    <span class="status-indicator" id="camera-status"></span>
+                    <span id="camera-status-text">Camera Offline</span>
+                </span>
+                <span class="text-light me-3" id="storage-indicator">
+                    <i class="bi bi-cloud" id="storage-icon"></i>
+                    <span id="storage-status-text">Local</span>
+                </span>
+                <a href="#" class="sheet-link" id="sheet-link" target="_blank">
+                    <i class="bi bi-table"></i> View Google Sheet
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Loading Spinner -->
+    <div class="loading-spinner" id="loading-spinner">
+        <div class="spinner-content">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-3" id="loading-text">Processing...</p>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Main Content -->
+    <div class="container main-container">
+        <!-- Stats Row -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body stats-card">
+                        <div class="number" id="total-records">0</div>
+                        <div class="label">Total Records</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body stats-card">
+                        <div class="number" id="today-scans">0</div>
+                        <div class="label">Today's Scans</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body stats-card">
+                        <div class="number text-success" id="success-rate">100%</div>
+                        <div class="label">Success Rate</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Webcam Section -->
+            <div class="col-lg-7 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="bi bi-camera-video me-2"></i>Live Camera Feed</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="webcam-container mb-3">
+                            <img id="webcam-feed" src="" alt="Webcam Feed">
+                            <div class="webcam-overlay" id="webcam-overlay">
+                                <div class="text-center">
+                                    <i class="bi bi-camera-video-off" style="font-size: 3rem;"></i>
+                                    <p class="mt-2">Camera is offline</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2 justify-content-center flex-wrap">
+                            <button class="btn btn-start btn-lg text-white" id="btn-start-camera">
+                                <i class="bi bi-play-fill"></i> Start Camera
+                            </button>
+                            <button class="btn btn-stop btn-lg text-white" id="btn-stop-camera" disabled>
+                                <i class="bi bi-stop-fill"></i> Stop Camera
+                            </button>
+                            <button class="btn btn-capture btn-lg text-white" id="btn-capture" disabled>
+                                <i class="bi bi-camera"></i> Capture & Scan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload Section -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5><i class="bi bi-upload me-2"></i>Upload Image</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="upload-zone" id="upload-zone">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                            <p>Drag & drop an image here or click to browse</p>
+                            <input type="file" id="file-input" accept="image/*" hidden>
+                        </div>
+                        <img id="preview-image" class="preview-image" style="display: none;">
+                        <div class="mt-3 text-center" id="upload-actions" style="display: none;">
+                            <button class="btn btn-capture text-white" id="btn-scan-upload">
+                                <i class="bi bi-upc-scan"></i> Scan Uploaded Image
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Real-Time OCR Section -->
+                <div class="card mt-4">
+                    <div class="card-header" style="background: linear-gradient(135deg, #7209b7, #f72585);">
+                        <h5><i class="bi bi-eye me-2"></i>Real-Time OCR Mode</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-light mb-3">
+                            <small>Enable real-time text detection with live bounding boxes and confidence visualization.</small>
+                        </p>
+                        
+                        <!-- Real-time OCR Controls -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="form-label text-light small">View Mode</label>
+                                <select class="form-select form-select-sm bg-dark text-light border-secondary" id="rt-view-mode">
+                                    <option value="1">High Confidence (>75%)</option>
+                                    <option value="2">Color Coded</option>
+                                    <option value="3">Gradient</option>
+                                    <option value="4">All Detections</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label text-light small">Language</label>
+                                <select class="form-select form-select-sm bg-dark text-light border-secondary" id="rt-language">
+                                    <option value="eng">English</option>
+                                    <option value="chi_sim">Chinese (Simplified)</option>
+                                    <option value="chi_tra">Chinese (Traditional)</option>
+                                    <option value="jpn">Japanese</option>
+                                    <option value="kor">Korean</option>
+                                    <option value="hin">Hindi</option>
+                                    <option value="ara">Arabic</option>
+                                    <option value="eng+chi_sim">English + Chinese</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="form-label text-light small">Crop Width</label>
+                                <input type="number" class="form-control form-control-sm bg-dark text-light border-secondary" 
+                                       id="rt-crop-w" value="100" min="0" max="400">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label text-light small">Crop Height</label>
+                                <input type="number" class="form-control form-control-sm bg-dark text-light border-secondary" 
+                                       id="rt-crop-h" value="100" min="0" max="300">
+                            </div>
+                        </div>
+                        
+                        <!-- Real-time OCR Status -->
+                        <div class="d-flex align-items-center mb-3" id="rt-status">
+                            <span class="status-indicator status-inactive" id="rt-status-indicator"></span>
+                            <span class="text-muted small" id="rt-status-text">Inactive</span>
+                        </div>
+                        
+                        <!-- Real-time detected text -->
+                        <div class="mb-3" id="rt-text-container" style="display: none;">
+                            <label class="form-label text-light small">Detected Text:</label>
+                            <div class="bg-dark p-2 rounded border border-secondary" style="max-height: 80px; overflow-y: auto;">
+                                <small class="text-success font-monospace" id="rt-detected-text">Waiting for text...</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Real-time OCR Buttons -->
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button class="btn btn-sm text-white" id="btn-start-rt-ocr" 
+                                    style="background: linear-gradient(135deg, #7209b7, #560bad);">
+                                <i class="bi bi-play-fill"></i> Start Real-Time OCR
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" id="btn-stop-rt-ocr" disabled>
+                                <i class="bi bi-stop-fill"></i> Stop
+                            </button>
+                            <button class="btn btn-sm btn-outline-success" id="btn-capture-rt" disabled>
+                                <i class="bi bi-camera"></i> Capture
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Extracted Data Section -->
+            <div class="col-lg-5 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="bi bi-file-text me-2"></i>Extracted Data</h5>
+                        <button class="btn btn-sm btn-outline-light" id="btn-save-data" disabled>
+                            <i class="bi bi-cloud-upload"></i> Save to Sheet
+                        </button>
+                    </div>
+                    <div class="card-body extracted-data" id="extracted-data-container">
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                            <p class="mt-2">No data extracted yet.<br>Capture or upload an image to start.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Raw OCR Text -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5><i class="bi bi-text-paragraph me-2"></i>Raw OCR Text</h5>
+                    </div>
+                    <div class="card-body">
+                        <pre id="raw-ocr-text" class="text-light" style="max-height: 200px; overflow-y: auto; font-size: 0.8rem; white-space: pre-wrap;">No text extracted yet.</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Records -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="bi bi-clock-history me-2"></i>Recent Records</h5>
+                        <button class="btn btn-sm btn-outline-light" id="btn-refresh-records">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table records-table">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Reg. No</th>
+                                        <th>Degree/Branch</th>
+                                        <th>Subject</th>
+                                        <th>Total Marks</th>
+                                        <th>Grand Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="records-table-body">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">No records found</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables
+        let currentExtractedData = null;
+        let uploadedFile = null;
+        let cameraActive = false;
+        let frameInterval = null;
+
+        // DOM Elements
+        const webcamFeed = document.getElementById('webcam-feed');
+        const webcamOverlay = document.getElementById('webcam-overlay');
+        const cameraStatus = document.getElementById('camera-status');
+        const cameraStatusText = document.getElementById('camera-status-text');
+        const btnStartCamera = document.getElementById('btn-start-camera');
+        const btnStopCamera = document.getElementById('btn-stop-camera');
+        const btnCapture = document.getElementById('btn-capture');
+        const btnSaveData = document.getElementById('btn-save-data');
+        const extractedDataContainer = document.getElementById('extracted-data-container');
+        const rawOcrText = document.getElementById('raw-ocr-text');
+        const uploadZone = document.getElementById('upload-zone');
+        const fileInput = document.getElementById('file-input');
+        const previewImage = document.getElementById('preview-image');
+        const uploadActions = document.getElementById('upload-actions');
+        const btnScanUpload = document.getElementById('btn-scan-upload');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const loadingText = document.getElementById('loading-text');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchStats();
+            fetchRecentRecords();
+            fetchSheetUrl();
+            fetchStorageStatus();
+        });
+
+        // Fetch storage status (Cloudinary/Local)
+        async function fetchStorageStatus() {
+            try {
+                const response = await fetch('/api/storage/status');
+                const data = await response.json();
+                
+                const storageIcon = document.getElementById('storage-icon');
+                const storageText = document.getElementById('storage-status-text');
+                
+                if (data.storage_mode === 'cloudinary') {
+                    storageIcon.className = 'bi bi-cloud-check text-success';
+                    storageText.textContent = 'Cloudinary';
+                    storageText.className = 'text-success';
+                } else {
+                    storageIcon.className = 'bi bi-hdd text-warning';
+                    storageText.textContent = 'Local';
+                    storageText.className = 'text-warning';
+                }
+            } catch (error) {
+                console.error('Error fetching storage status:', error);
+            }
+        }
+
+        // Camera Controls
+        btnStartCamera.addEventListener('click', startCamera);
+        btnStopCamera.addEventListener('click', stopCamera);
+        btnCapture.addEventListener('click', captureAndScan);
+
+        async function startCamera() {
+            showLoading('Starting camera...');
+            try {
+                const response = await fetch('/api/camera/start', { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    cameraActive = true;
+                    updateCameraUI(true);
+                    startFrameStream();
+                    showToast('Camera started successfully', 'success');
+                } else {
+                    showToast(data.message || 'Failed to start camera', 'error');
+                }
+            } catch (error) {
+                showToast('Error starting camera: ' + error.message, 'error');
+            }
+            hideLoading();
+        }
+
+        async function stopCamera() {
+            try {
+                const response = await fetch('/api/camera/stop', { method: 'POST' });
+                const data = await response.json();
+                
+                cameraActive = false;
+                updateCameraUI(false);
+                stopFrameStream();
+                showToast('Camera stopped', 'info');
+            } catch (error) {
+                showToast('Error stopping camera: ' + error.message, 'error');
+            }
+        }
+
+        function updateCameraUI(active) {
+            cameraStatus.className = `status-indicator ${active ? 'status-active' : 'status-inactive'}`;
+            cameraStatusText.textContent = active ? 'Camera Online' : 'Camera Offline';
+            webcamOverlay.style.display = active ? 'none' : 'flex';
+            btnStartCamera.disabled = active;
+            btnStopCamera.disabled = !active;
+            btnCapture.disabled = !active;
+        }
+
+        function startFrameStream() {
+            webcamFeed.src = '/api/camera/stream?' + new Date().getTime();
+        }
+
+        function stopFrameStream() {
+            webcamFeed.src = '';
+        }
+
+        async function captureAndScan() {
+            showLoading('Capturing and processing image...');
+            try {
+                const response = await fetch('/api/capture-and-extract', { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentExtractedData = data.data;
+                    displayExtractedData(data.data);
+                    rawOcrText.textContent = data.raw_text || 'No text extracted';
+                    btnSaveData.disabled = false;
+                    showToast('Data extracted successfully', 'success');
+                } else {
+                    showToast(data.message || 'Failed to extract data', 'error');
+                }
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            }
+            hideLoading();
+        }
+
+        // File Upload
+        uploadZone.addEventListener('click', () => fileInput.click());
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFileSelect(e.dataTransfer.files[0]);
+            }
+        });
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        function handleFileSelect(file) {
+            if (!file.type.startsWith('image/')) {
+                showToast('Please select an image file', 'error');
+                return;
+            }
+            
+            uploadedFile = file;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                previewImage.style.display = 'block';
+                uploadActions.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        btnScanUpload.addEventListener('click', async () => {
+            if (!uploadedFile) {
+                showToast('No file selected', 'error');
+                return;
+            }
+            
+            showLoading('Processing uploaded image...');
+            
+            const formData = new FormData();
+            formData.append('image', uploadedFile);
+            
+            try {
+                const response = await fetch('/api/upload-and-extract', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentExtractedData = data.data;
+                    displayExtractedData(data.data);
+                    rawOcrText.textContent = data.raw_text || 'No text extracted';
+                    btnSaveData.disabled = false;
+                    showToast('Data extracted successfully', 'success');
+                } else {
+                    showToast(data.message || 'Failed to extract data', 'error');
+                }
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            }
+            hideLoading();
+        });
+
+        // Save Data
+        btnSaveData.addEventListener('click', async () => {
+            if (!currentExtractedData) {
+                showToast('No data to save', 'error');
+                return;
+            }
+            
+            showLoading('Saving to Google Sheets...');
+            
+            try {
+                const response = await fetch('/api/save-to-sheet', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(currentExtractedData)
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('Data saved to Google Sheets!', 'success');
+                    fetchStats();
+                    fetchRecentRecords();
+                    currentExtractedData = null;
+                    btnSaveData.disabled = true;
+                } else {
+                    showToast(data.message || 'Failed to save data', 'error');
+                }
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            }
+            hideLoading();
+        });
+
+        // Display extracted data
+        function displayExtractedData(data) {
+            const fields = [
+                { key: 'registration_no', label: 'Registration No' },
+                { key: 'college_code', label: 'College Code' },
+                { key: 'date', label: 'Date' },
+                { key: 'degree_branch', label: 'Degree/Branch' },
+                { key: 'semester_section', label: 'Semester/Section' },
+                { key: 'subject_code', label: 'Subject Code' },
+                { key: 'subject_name', label: 'Subject Name' },
+                { key: 'no_of_pages', label: 'No. of Pages' },
+                { key: 'total_marks', label: 'Total Marks' },
+                { key: 'grand_total', label: 'Grand Total' },
+                { key: 'examiner_name', label: 'Examiner Name' }
+            ];
+            
+            let html = '';
+            fields.forEach(field => {
+                const value = data[field.key] || '-';
+                html += `
+                    <div class="data-field">
+                        <label>${field.label}</label>
+                        <div class="value">${value}</div>
+                    </div>
+                `;
+            });
+            
+            // Part A Marks
+            if (data.part_a_marks && Object.keys(data.part_a_marks).length > 0) {
+                html += '<div class="data-field"><label>Part A Marks</label><div class="value">';
+                Object.entries(data.part_a_marks).forEach(([key, value]) => {
+                    html += `${key.toUpperCase()}: ${value} | `;
+                });
+                html = html.slice(0, -3);
+                html += '</div></div>';
+            }
+            
+            // Course Outcomes
+            if (data.course_outcomes && Object.keys(data.course_outcomes).length > 0) {
+                html += '<div class="data-field"><label>Course Outcomes</label><div class="value">';
+                Object.entries(data.course_outcomes).forEach(([co, values]) => {
+                    html += `${co}: A=${values.part_a}, B=${values.part_b}, C=${values.part_c}, Total=${values.total}<br>`;
+                });
+                html += '</div></div>';
+            }
+            
+            extractedDataContainer.innerHTML = html;
+        }
+
+        // Fetch stats
+        async function fetchStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                
+                document.getElementById('total-records').textContent = data.total_records || 0;
+                document.getElementById('today-scans').textContent = data.today_scans || 0;
+                document.getElementById('success-rate').textContent = (data.success_rate || 100) + '%';
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            }
+        }
+
+        // Fetch recent records
+        document.getElementById('btn-refresh-records').addEventListener('click', fetchRecentRecords);
+        
+        async function fetchRecentRecords() {
+            try {
+                const response = await fetch('/api/recent-records');
+                const data = await response.json();
+                
+                const tbody = document.getElementById('records-table-body');
+                
+                if (data.records && data.records.length > 0) {
+                    tbody.innerHTML = data.records.map(record => `
+                        <tr>
+                            <td>${record.timestamp || '-'}</td>
+                            <td>${record.registration_no || '-'}</td>
+                            <td>${record.degree_branch || '-'}</td>
+                            <td>${record.subject_code || '-'}</td>
+                            <td>${record.total_marks || '-'}</td>
+                            <td>${record.grand_total || '-'}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No records found</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error fetching records:', error);
+            }
+        }
+
+        // Fetch sheet URL
+        async function fetchSheetUrl() {
+            try {
+                const response = await fetch('/api/sheet-url');
+                const data = await response.json();
+                
+                if (data.url) {
+                    document.getElementById('sheet-link').href = data.url;
+                }
+            } catch (error) {
+                console.error('Error fetching sheet URL:', error);
+            }
+        }
+
+        // Utility functions
+        function showLoading(text = 'Processing...') {
+            loadingText.textContent = text;
+            loadingSpinner.classList.add('active');
+        }
+
+        function hideLoading() {
+            loadingSpinner.classList.remove('active');
+        }
+
+        function showToast(message, type = 'info') {
+            const toastContainer = document.getElementById('toast-container');
+            const toastId = 'toast-' + Date.now();
+            
+            const bgClass = {
+                'success': 'bg-success',
+                'error': 'bg-danger',
+                'warning': 'bg-warning',
+                'info': 'bg-info'
+            }[type] || 'bg-info';
+            
+            const icon = {
+                'success': 'bi-check-circle',
+                'error': 'bi-x-circle',
+                'warning': 'bi-exclamation-triangle',
+                'info': 'bi-info-circle'
+            }[type] || 'bi-info-circle';
+            
+            const toastHtml = `
+                <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="bi ${icon} me-2"></i>${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+            
+            const toastEl = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastEl, { delay: 4000 });
+            toast.show();
+            
+            toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+        }
+
+        // Keyboard shortcut
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && cameraActive && !e.target.matches('input, textarea')) {
+                e.preventDefault();
+                captureAndScan();
+            }
+        });
+
+        // ==================== Real-Time OCR Functions ====================
+        
+        let rtOcrActive = false;
+        let rtTextInterval = null;
+        
+        // Real-Time OCR DOM Elements
+        const btnStartRtOcr = document.getElementById('btn-start-rt-ocr');
+        const btnStopRtOcr = document.getElementById('btn-stop-rt-ocr');
+        const btnCaptureRt = document.getElementById('btn-capture-rt');
+        const rtStatusIndicator = document.getElementById('rt-status-indicator');
+        const rtStatusText = document.getElementById('rt-status-text');
+        const rtTextContainer = document.getElementById('rt-text-container');
+        const rtDetectedText = document.getElementById('rt-detected-text');
+        const rtViewMode = document.getElementById('rt-view-mode');
+        const rtLanguage = document.getElementById('rt-language');
+        const rtCropW = document.getElementById('rt-crop-w');
+        const rtCropH = document.getElementById('rt-crop-h');
+        
+        // Start Real-Time OCR
+        btnStartRtOcr.addEventListener('click', startRealTimeOCR);
+        btnStopRtOcr.addEventListener('click', stopRealTimeOCR);
+        btnCaptureRt.addEventListener('click', captureRealTimeOCR);
+        
+        // View mode change handler
+        rtViewMode.addEventListener('change', async () => {
+            if (rtOcrActive) {
+                try {
+                    await fetch('/api/realtime-ocr/view-mode', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ mode: parseInt(rtViewMode.value) })
+                    });
+                } catch (error) {
+                    console.error('Error changing view mode:', error);
+                }
+            }
+        });
+        
+        async function startRealTimeOCR() {
+            showLoading('Starting Real-Time OCR...');
+            
+            try {
+                const config = {
+                    camera_src: 0,
+                    resolution: [1280, 720],
+                    crop: [parseInt(rtCropW.value) || 100, parseInt(rtCropH.value) || 100],
+                    view_mode: parseInt(rtViewMode.value) || 1,
+                    language: rtLanguage.value || 'eng',
+                    use_easyocr: false
+                };
+                
+                const response = await fetch('/api/realtime-ocr/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    rtOcrActive = true;
+                    updateRtOcrUI(true);
+                    
+                    // Switch webcam feed to real-time OCR stream
+                    webcamFeed.src = '/api/realtime-ocr/stream?' + Date.now();
+                    webcamOverlay.style.display = 'none';
+                    
+                    // Start polling for detected text
+                    rtTextInterval = setInterval(fetchRealTimeText, 1000);
+                    
+                    showToast('Real-Time OCR started! Text detection is now active.', 'success');
+                } else {
+                    showToast(data.message || 'Failed to start Real-Time OCR', 'error');
+                }
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            }
+            
+            hideLoading();
+        }
+        
+        async function stopRealTimeOCR() {
+            try {
+                const response = await fetch('/api/realtime-ocr/stop', { method: 'POST' });
+                const data = await response.json();
+                
+                rtOcrActive = false;
+                updateRtOcrUI(false);
+                
+                // Clear text polling
+                if (rtTextInterval) {
+                    clearInterval(rtTextInterval);
+                    rtTextInterval = null;
+                }
+                
+                // Reset webcam feed
+                webcamFeed.src = '';
+                webcamOverlay.style.display = 'flex';
+                
+                showToast('Real-Time OCR stopped', 'info');
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            }
+        }
+        
+        async function captureRealTimeOCR() {
+            showLoading('Capturing...');
+            
+            try {
+                const response = await fetch('/api/realtime-ocr/capture', { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('Image captured! Text: ' + (data.detected_text || 'None').substring(0, 50) + '...', 'success');
+                } else {
+                    showToast(data.message || 'Capture failed', 'error');
+                }
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            }
+            
+            hideLoading();
+        }
+        
+        async function fetchRealTimeText() {
+            if (!rtOcrActive) return;
+            
+            try {
+                const response = await fetch('/api/realtime-ocr/text');
+                const data = await response.json();
+                
+                if (data.success && data.text) {
+                    rtDetectedText.textContent = data.text || 'No text detected';
+                }
+            } catch (error) {
+                console.error('Error fetching real-time text:', error);
+            }
+        }
+        
+        function updateRtOcrUI(active) {
+            if (active) {
+                btnStartRtOcr.disabled = true;
+                btnStopRtOcr.disabled = false;
+                btnCaptureRt.disabled = false;
+                rtStatusIndicator.classList.remove('status-inactive');
+                rtStatusIndicator.classList.add('status-active');
+                rtStatusText.textContent = 'Active - Detecting text...';
+                rtStatusText.classList.remove('text-muted');
+                rtStatusText.classList.add('text-success');
+                rtTextContainer.style.display = 'block';
+                
+                // Disable regular camera controls while RT OCR is active
+                btnStartCamera.disabled = true;
+                btnStopCamera.disabled = true;
+                btnCapture.disabled = true;
+            } else {
+                btnStartRtOcr.disabled = false;
+                btnStopRtOcr.disabled = true;
+                btnCaptureRt.disabled = true;
+                rtStatusIndicator.classList.remove('status-active');
+                rtStatusIndicator.classList.add('status-inactive');
+                rtStatusText.textContent = 'Inactive';
+                rtStatusText.classList.remove('text-success');
+                rtStatusText.classList.add('text-muted');
+                rtTextContainer.style.display = 'none';
+                rtDetectedText.textContent = 'Waiting for text...';
+                
+                // Re-enable regular camera controls
+                btnStartCamera.disabled = false;
+                btnStopCamera.disabled = !cameraActive;
+                btnCapture.disabled = !cameraActive;
+            }
+        }
+        
+        // Check real-time OCR status on page load
+        async function checkRtOcrStatus() {
+            try {
+                const response = await fetch('/api/realtime-ocr/status');
+                const data = await response.json();
+                
+                if (data.active) {
+                    rtOcrActive = true;
+                    updateRtOcrUI(true);
+                    webcamFeed.src = '/api/realtime-ocr/stream?' + Date.now();
+                    webcamOverlay.style.display = 'none';
+                    rtTextInterval = setInterval(fetchRealTimeText, 1000);
+                }
+            } catch (error) {
+                console.error('Error checking RT OCR status:', error);
+            }
+        }
+        
+        // Add to initialization
+        checkRtOcrStatus();
+    </script>
+</body>
+</html>
